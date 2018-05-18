@@ -7,9 +7,9 @@ Hoedown
 缘起
 --------
 
-近期使用markdown做笔记。希望找一款软件，取代 evernote 笔记功能。
-evernote转为「收集资料库」；
-而 markdown 软件，用于 **整理、输出、总结**。
+近期使用markdown做笔记。希望找一款软件，取代 evernote 笔记功能。<br>
+evernote转为「资料收集库」。<br>
+而 markdown 软件，用于后续深入的 **整理、总结、输出**。
 
 按这个需要出发，大概需要几个特点：
 1. 同时支持 mac和IOS;
@@ -18,7 +18,8 @@ evernote转为「收集资料库」；
 
 最后选择了 **mweb**。
 
-使用过程中，对一些语法解析不太满意。和作者 @oulvhai 联系之后，使用的markdown解析库 是 Hoedown，自告奋勇，修改这库。
+使用过程中，对一些语法解析不太满意。<br>
+和作者 @oulvhai 联系之后，得知 MWeb 使用的解析库 是 Hoedown，自告奋勇修改该库。
 
 Hoedown 的原始代码地址：https://github.com/hoedown/hoedown
 
@@ -28,14 +29,14 @@ mweb的问题列表： issue：https://github.com/oulvhai/MWeb-issues
 
 主要修改几个新的功能：
 - 列表之前语法之前，不需要强制 **空行**；
-- 列表里面，自然换行，也可以解析为<br>
+- 列表里面，自然换行，也可以解析为\<br\>
 - bug修复：代码块中的 语法，被误以为 footnote；
 
-其实更好的办法是换库：**github的cmark库**。目前活跃度很高，代码质量也很高。
+其实更好的办法是换库：**github的cmark库**。目前活跃度很高，代码质量也很高。<br>
 https://github.com/github/cmark/tree/master/src
 
-Hoedown 本身解析的过程，是「一行行硬解析」，没有使用AST。
-还好 Markdwowm 不算复杂，这个框架勉强还能应付的过去。
+Hoedown 本身解析的过程，是「一行行硬解析」，没有使用AST。<br>
+还好 Markdwowm 不算复杂，这个框架勉强还能应付的过去。<br>
 后面的扩展和维护，潜力小，比较麻烦。如果要做的完全符合标准，估计还需要加一堆「补丁」。
 
 
