@@ -1969,13 +1969,6 @@ parse_listitem(hoedown_buffer *ob, hoedown_document *doc, uint8_t *data, size_t 
 			in_empty = 0;
 		}
 
-
-/*
-			if ( !sublist ) {
-				hoedown_buffer_putc(work, '\n');
-			}
-*/
-
 		/* adding the line without prefix into the working buffer */
 		hoedown_buffer_put(work, data + beg + i, end - beg - i);
 		beg = end;
