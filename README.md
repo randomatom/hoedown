@@ -1,18 +1,22 @@
 Hoedown
 =======
 
-[![Build Status](https://travis-ci.org/hoedown/hoedown.png?branch=master)](https://travis-ci.org/hoedown/hoedown)
-
-`Hoedown` is a revived fork of [Sundown](https://github.com/vmg/sundown),
-the Markdown parser based on the original code of the
-[Upskirt library](http://fossil.instinctive.eu/libupskirt/index)
-by Natacha Porté.
 
 
-新的缘由
+
+缘起
 --------
 
-近期使用markdown做笔记，由于同时需要 mac和IOS 两端 的软件，以及需要文档库管理，以及代码、表格、TOC等等支持，最后选择了mweb这款markdown软件。
+近期使用markdown做笔记。希望找一款软件，取代 evernote 笔记功能。
+evernote转为「收集资料库」；
+而 markdown 软件，用于 **整理、输出、总结**。
+
+按这个需要出发，大概需要几个特点：
+1. 同时支持 mac和IOS;
+2. 文档库管理，多级目录、tag、检索等等；
+3. 对markdown扩展支持比较丰富，比如代码、表格、TOC等等；
+
+最后选择了 **mweb**。
 
 使用过程中，对一些语法解析不太满意。和作者 @oulvhai 联系之后，使用的markdown解析库 是 Hoedown，自告奋勇，修改这库。
 
@@ -24,6 +28,16 @@ mweb的问题列表： issue：https://github.com/oulvhai/MWeb-issues
 - 列表之前语法之前，不需要强制 **空行**；
 - 列表里面，自然换行，也可以解析为<br>
 - bug修复：代码块中的 语法，被误以为 footnote；
+
+
+
+
+[![Build Status](https://travis-ci.org/hoedown/hoedown.png?branch=master)](https://travis-ci.org/hoedown/hoedown)
+
+`Hoedown` is a revived fork of [Sundown](https://github.com/vmg/sundown),
+the Markdown parser based on the original code of the
+[Upskirt library](http://fossil.instinctive.eu/libupskirt/index)
+by Natacha Porté.
 
 
 Features
