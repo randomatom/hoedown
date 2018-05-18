@@ -1969,6 +1969,13 @@ parse_listitem(hoedown_buffer *ob, hoedown_document *doc, uint8_t *data, size_t 
 			in_empty = 0;
 		}
 
+
+/*
+			if ( !sublist ) {
+				hoedown_buffer_putc(work, '\n');
+			}
+*/
+
 		/* adding the line without prefix into the working buffer */
 		hoedown_buffer_put(work, data + beg + i, end - beg - i);
 		beg = end;
@@ -1984,8 +1991,9 @@ parse_listitem(hoedown_buffer *ob, hoedown_document *doc, uint8_t *data, size_t 
 			parse_block(inter, doc, work->data, sublist);
 			parse_block(inter, doc, work->data + sublist, work->size - sublist);
 		}
-		else
+		else {
 			parse_block(inter, doc, work->data, work->size);
+		}
 	} else {
 		/* intermediate render of inline li */
 		if (sublist && sublist < work->size) {
@@ -2473,11 +2481,11 @@ parse_table(
 			i++;
 		}
 
-        if (doc->md.table_header)
-            doc->md.table_header(work, header_work, &doc->data);
+		if (doc->md.table_header)
+			doc->md.table_header(work, header_work, &doc->data);
 
-        if (doc->md.table_body)
-            doc->md.table_body(work, body_work, &doc->data);
+		if (doc->md.table_body)
+			doc->md.table_body(work, body_work, &doc->data);
 
 		if (doc->md.table)
 			doc->md.table(ob, work, &doc->data);

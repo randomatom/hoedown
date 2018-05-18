@@ -265,16 +265,90 @@ rndr_list(hoedown_buffer *ob, const hoedown_buffer *content, hoedown_list_flags 
 	hoedown_buffer_put(ob, (const uint8_t *)(flags & HOEDOWN_LIST_ORDERED ? "</ol>\n" : "</ul>\n"), 6);
 }
 
+
+
+static int
+is_end_of_br_and_tag(uint8_t* s, size_t size) {
+    size_t i;
+    size_t end = size;
+    char* data = (char*)s;
+    
+    char* tags[3] = {"<br>", "<br/>", "</li>"};
+    
+    while ( data[end-1] == '\n') end--;
+    
+    for(i = 0 ; i < sizeof(tags) / sizeof(char**); i++ ) {
+        char* tag = NULL;
+        size_t tag_len = 0;
+        tag = tags[i];
+        tag_len = strlen(tag);
+
+        if ( strncmp(data + end - tag_len, tag, tag_len) == 0 ) {
+            return 1;
+        }
+    }
+    return 0;
+}
+
+
+
+
 static void
 rndr_listitem(hoedown_buffer *ob, const hoedown_buffer *content, hoedown_list_flags flags, const hoedown_renderer_data *data)
 {
+	hoedown_html_renderer_state *state = data->opaque;
+    
 	HOEDOWN_BUFPUTSL(ob, "<li>");
 	if (content) {
+        int last_line_need_br_tag = 0;
+
 		size_t size = content->size;
-		while (size && content->data[size - 1] == '\n')
+		
+        while ( size > 0 && content->data[size-1] == '\n')
 			size--;
 
-		hoedown_buffer_put(ob, content->data, size);
+        if (state->flags & HOEDOWN_HTML_HARD_WRAP) {
+            size_t beg, end;          
+            
+            
+            beg = 0;
+            end = 0;
+            while ( beg < size ) {
+                end = beg;
+                while ( end < size && content->data[end] != '\n')
+                    end++;
+                
+                if ( last_line_need_br_tag ) {
+                    if ( content->data[beg] == '<' ) {
+                        hoedown_buffer_put(ob, (uint8_t*)"\n", 1);
+                    } else {
+                        rndr_linebreak(ob, data);
+                    }
+                    last_line_need_br_tag = 0;
+                }
+                
+                hoedown_buffer_put(ob, content->data + beg , end - beg);
+                
+                if ( end == size ) {
+                    /* emtpy */
+                }
+                else if ( is_end_of_br_and_tag(content->data + beg, end - beg) ||
+                    content->data[beg] == '<' ) {
+                    hoedown_buffer_put(ob, (uint8_t*)"\n", 1);
+                }
+                else {
+                    last_line_need_br_tag = 1;
+                }
+
+
+                beg = end + 1;
+                while ( beg < size && content->data[beg] == '\n')
+                    beg++;
+            }
+        }
+		else {
+			hoedown_buffer_put(ob, content->data, size); 
+		}
 	}
 	HOEDOWN_BUFPUTSL(ob, "</li>\n");
 }
