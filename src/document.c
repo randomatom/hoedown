@@ -1399,6 +1399,18 @@ is_empty(const uint8_t *data, size_t size)
 	return i + 1;
 }
 
+static int
+is_list_header(const uint8_t *data, size_t size)
+{
+	char c = (char)data[0];
+	if ( size < 2 ) return 0;
+	if ((c == '-' || c == '+' || c=='*') && data[1] == ' ')
+		return 1;
+	if ( ('0' <= c && c <= '9') && data[1] == '.' && data[2] == ' ')
+		return 1;
+	return 0;
+	
+}
 
 
 
@@ -1698,6 +1710,11 @@ parse_paragraph(hoedown_buffer *ob, hoedown_document *doc, uint8_t *data, size_t
 		if (is_empty(data + i, size - i))
 			break;
 		
+		if (is_list_header(data + i, size - i)) {
+			end = i;
+			break;
+		}
+
 		if (is_codefence(data + i, size - i, &w, &c)) {
 			end = i;
 			break;
