@@ -24,10 +24,19 @@ Hoedown 的原始代码地址：https://github.com/hoedown/hoedown
 
 mweb的问题列表： issue：https://github.com/oulvhai/MWeb-issues
 
+
+
 主要修改几个新的功能：
 - 列表之前语法之前，不需要强制 **空行**；
 - 列表里面，自然换行，也可以解析为<br>
 - bug修复：代码块中的 语法，被误以为 footnote；
+
+其实更好的办法是换库：**github的cmark库**。目前活跃度很高，代码质量也很高。
+https://github.com/github/cmark/tree/master/src
+
+Hoedown 本身解析的过程，是「一行行硬解析」，没有使用AST。
+还好 Markdwowm 不算复杂，这个框架勉强还能应付的过去。
+后面的扩展和维护，潜力小，比较麻烦。如果要做的完全符合标准，估计还需要加一堆「补丁」。
 
 
 
