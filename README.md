@@ -8,6 +8,24 @@ the Markdown parser based on the original code of the
 [Upskirt library](http://fossil.instinctive.eu/libupskirt/index)
 by Natacha Porté.
 
+
+新的缘由
+--------
+
+近期使用markdown做笔记，由于同时需要 mac和IOS 两端 的软件，以及需要文档库管理，以及代码、表格、TOC等等支持，最后选择了mweb这款markdown软件。
+
+使用过程中，对一些语法解析不太满意。和作者 @oulvhai 联系之后，使用的markdown解析库 是 Hoedown，自告奋勇，修改这库。
+
+Hoedown 的原始代码地址：https://github.com/hoedown/hoedown
+
+mweb的问题列表： issue：https://github.com/oulvhai/MWeb-issues
+
+主要修改几个新的功能：
+- 列表之前语法之前，不需要强制 **空行**；
+- 列表里面，自然换行，也可以解析为<br>
+- bug修复：代码块中的 语法，被误以为 footnote；
+
+
 Features
 --------
 
