@@ -1718,7 +1718,7 @@ parse_paragraph(hoedown_buffer *ob, hoedown_document *doc, uint8_t *data, size_t
 		if (is_codefence(data + i, size - i, &w, &c)) {
 			end = i;
 			break;
-	}
+		}
 
 		if ((level = is_headerline(data + i, size - i)) != 0)
 			break;
@@ -1938,6 +1938,7 @@ parse_listitem(hoedown_buffer *ob, hoedown_document *doc, uint8_t *data, size_t 
 
 		/* checking for a new item */
 		if ((has_next_uli && !is_hrule(data + beg + i, end - beg - i)) || has_next_oli) {
+            
 			if (in_empty)
 				has_inside_empty = 1;
 
@@ -1984,9 +1985,9 @@ parse_listitem(hoedown_buffer *ob, hoedown_document *doc, uint8_t *data, size_t 
 			parse_block(inter, doc, work->data, sublist);
 			parse_block(inter, doc, work->data + sublist, work->size - sublist);
 		}
-		else {
+        else {
 			parse_block(inter, doc, work->data, work->size);
-		}
+        }
 	} else {
 		/* intermediate render of inline li */
 		if (sublist && sublist < work->size) {
@@ -2140,16 +2141,22 @@ htmlblock_find_end(
 	size_t tag_len,
 	hoedown_document *doc,
 	uint8_t *data,
-	size_t size)
+	size_t size,
+	int *tag_w)
 {
 	size_t i = 0, w;
+
+	*tag_w = 0;
 
 	while (1) {
 		while (i < size && data[i] != '<') i++;
 		if (i >= size) return 0;
 
 		w = htmlblock_is_end(tag, tag_len, doc, data + i, size - i);
-		if (w) return i + w;
+		if (w) {
+			*tag_w = (int)w;
+			return i + w;
+		}
 		i++;
 	}
 }
@@ -2163,7 +2170,8 @@ htmlblock_find_end_strict(
 	size_t tag_len,
 	hoedown_document *doc,
 	uint8_t *data,
-	size_t size)
+	size_t size,
+	int *tag_w)
 {
 	size_t i = 0, mark;
 
@@ -2174,7 +2182,7 @@ htmlblock_find_end_strict(
 		if (i == mark) return 0;
 
 		if (data[mark] == ' ' && mark > 0) continue;
-		mark += htmlblock_find_end(tag, tag_len, doc, data + mark, i - mark);
+		mark += htmlblock_find_end(tag, tag_len, doc, data + mark, i - mark, tag_w);
 		if (mark == i && (is_empty(data + i, size - i) || i >= size)) break;
 	}
 
@@ -2189,6 +2197,9 @@ parse_htmlblock(hoedown_buffer *ob, hoedown_document *doc, uint8_t *data, size_t
 	size_t i, j = 0, tag_len, tag_end;
 	const char *curtag = NULL;
 
+    int tag1_w = 0;
+	int tag2_w = 0;
+
 	work.data = data;
 
 	/* identification of the opening tag */
@@ -2201,6 +2212,12 @@ parse_htmlblock(hoedown_buffer *ob, hoedown_document *doc, uint8_t *data, size_t
 
 	if (i < size)
 		curtag = hoedown_find_block_tag((char *)data + 1, (int)i - 1);
+
+    j = 0;
+    while ( j < size && data[j] != '>' && data[j] != '\n')
+        j++;
+    
+    if (data[j] == '>') tag1_w = (int)j+1;
 
 	/* handling of special cases */
 	if (!curtag) {
@@ -2249,15 +2266,27 @@ parse_htmlblock(hoedown_buffer *ob, hoedown_document *doc, uint8_t *data, size_t
 
 	/* looking for a matching closing tag in strict mode */
 	tag_len = strlen(curtag);
-	tag_end = htmlblock_find_end_strict(curtag, tag_len, doc, data, size);
+
+	tag_end = htmlblock_find_end_strict(curtag, tag_len, doc, data, size, &tag2_w);
+
 
 	/* if not found, trying a second pass looking for indented match */
 	/* but not if tag is "ins" or "del" (following original Markdown.pl) */
 	if (!tag_end && strcmp(curtag, "ins") != 0 && strcmp(curtag, "del") != 0)
-		tag_end = htmlblock_find_end(curtag, tag_len, doc, data, size);
+		tag_end = htmlblock_find_end(curtag, tag_len, doc, data, size, &tag2_w);
 
-	if (!tag_end)
+
+	if ( strcmp(curtag,"div") == 0)
+	{
+		hoedown_buffer_put(ob, data, tag1_w);
+		parse_block(ob, doc, data + tag1_w , tag_end - tag2_w - tag1_w);
+		hoedown_buffer_put(ob, data + tag_end -  tag2_w, tag2_w);
+		return tag_end;
+	}
+
+	if (!tag_end) {
 		return 0;
+	}
 
 	/* the end of the block has been found */
 	work.size = tag_end;
@@ -2474,11 +2503,11 @@ parse_table(
 			i++;
 		}
 
-		if (doc->md.table_header)
-			doc->md.table_header(work, header_work, &doc->data);
+        if (doc->md.table_header)
+            doc->md.table_header(work, header_work, &doc->data);
 
-		if (doc->md.table_body)
-			doc->md.table_body(work, body_work, &doc->data);
+        if (doc->md.table_body)
+            doc->md.table_body(work, body_work, &doc->data);
 
 		if (doc->md.table)
 			doc->md.table(ob, work, &doc->data);
