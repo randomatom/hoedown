@@ -1399,6 +1399,11 @@ is_empty(const uint8_t *data, size_t size)
 	return i + 1;
 }
 
+
+
+
+
+
 /* is_hrule • returns whether a line is a horizontal rule */
 static int
 is_hrule(uint8_t *data, size_t size)
@@ -1434,7 +1439,7 @@ is_hrule(uint8_t *data, size_t size)
  * end of the code fence. if passed, width of
  * the fence rule and character will be returned */
 static size_t
-is_codefence(uint8_t *data, size_t size, size_t *width, uint8_t *chr)
+is_codefence(const uint8_t *data, size_t size, size_t *width, uint8_t *chr)
 {
 	size_t i = 0, n = 1;
 	uint8_t c;
@@ -1682,6 +1687,9 @@ parse_paragraph(hoedown_buffer *ob, hoedown_document *doc, uint8_t *data, size_t
 	size_t i = 0, end = 0;
 	int level = 0;
 
+	size_t w;
+	uint8_t c;
+
 	work.data = data;
 
 	while (i < size) {
@@ -1689,6 +1697,11 @@ parse_paragraph(hoedown_buffer *ob, hoedown_document *doc, uint8_t *data, size_t
 
 		if (is_empty(data + i, size - i))
 			break;
+		
+		if (is_codefence(data + i, size - i, &w, &c)) {
+			end = i;
+			break;
+	}
 
 		if ((level = is_headerline(data + i, size - i)) != 0)
 			break;
@@ -2862,6 +2875,10 @@ hoedown_document_render(hoedown_document *doc, hoedown_buffer *ob, const uint8_t
 
 	hoedown_buffer *text;
 	size_t beg, end;
+	
+	size_t w;
+	uint8_t c;
+	int in_code_flag = 0;
 
 	int footnotes_enabled;
 
@@ -2889,11 +2906,17 @@ hoedown_document_render(hoedown_document *doc, hoedown_buffer *ob, const uint8_t
 	if (size >= 3 && memcmp(data, UTF8_BOM, 3) == 0)
 		beg += 3;
 
-	while (beg < size) /* iterating over lines */
-		if (footnotes_enabled && is_footnote(data, beg, size, &end, &doc->footnotes_found))
+	while (beg < size)  { /* iterating over lines */ 
+		if ( is_codefence(data+beg, size, &w, &c) ) {
+			in_code_flag = !in_code_flag;
+		}
+
+		if (!in_code_flag && footnotes_enabled && is_footnote(data, beg, size, &end, &doc->footnotes_found)) {
 			beg = end;
-		else if (is_ref(data, beg, size, &end, doc->refs))
+		}
+		else if (!in_code_flag && is_ref(data, beg, size, &end, doc->refs)) {
 			beg = end;
+		}
 		else { /* skipping to the next line */
 			end = beg;
 			while (end < size && data[end] != '\n' && data[end] != '\r')
@@ -2912,6 +2935,7 @@ hoedown_document_render(hoedown_document *doc, hoedown_buffer *ob, const uint8_t
 
 			beg = end;
 		}
+	}
 
 	/* pre-grow the output buffer to minimize allocations */
 	hoedown_buffer_grow(ob, text->size + (text->size >> 1));
