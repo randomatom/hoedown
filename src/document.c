@@ -1975,28 +1975,14 @@ parse_listitem(hoedown_buffer *ob, hoedown_document *doc, uint8_t *data, size_t 
 		beg = end;
 	}
 
-	/* render of li contents */
-	if (has_inside_empty)
-		*flags |= HOEDOWN_LI_BLOCK;
+    /* intermediate render of inline li */
+    if (sublist && sublist < work->size) {
+        parse_inline(inter, doc, work->data, sublist);
+        parse_block(inter, doc, work->data + sublist, work->size - sublist);
+    }
+    else
+        parse_inline(inter, doc, work->data, work->size);
 
-	if (*flags & HOEDOWN_LI_BLOCK) {
-		/* intermediate render of block li */
-		if (sublist && sublist < work->size) {
-			parse_block(inter, doc, work->data, sublist);
-			parse_block(inter, doc, work->data + sublist, work->size - sublist);
-		}
-        else {
-			parse_block(inter, doc, work->data, work->size);
-        }
-	} else {
-		/* intermediate render of inline li */
-		if (sublist && sublist < work->size) {
-			parse_inline(inter, doc, work->data, sublist);
-			parse_block(inter, doc, work->data + sublist, work->size - sublist);
-		}
-		else
-			parse_inline(inter, doc, work->data, work->size);
-	}
 
 	/* render of li itself */
 	if (doc->md.listitem)
