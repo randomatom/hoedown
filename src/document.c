@@ -2276,6 +2276,9 @@ parse_htmlblock(hoedown_buffer *ob, hoedown_document *doc, uint8_t *data, size_t
 	if (!tag_end && strcmp(curtag, "ins") != 0 && strcmp(curtag, "del") != 0)
 		tag_end = htmlblock_find_end(curtag, tag_len, doc, data, size, &tag2_w);
 
+	if (!tag_end) {
+		return 0;
+	}
 
 	if ( strcmp(curtag,"div") == 0)
 	{
@@ -2285,9 +2288,6 @@ parse_htmlblock(hoedown_buffer *ob, hoedown_document *doc, uint8_t *data, size_t
 		return tag_end;
 	}
 
-	if (!tag_end) {
-		return 0;
-	}
 
 	/* the end of the block has been found */
 	work.size = tag_end;
