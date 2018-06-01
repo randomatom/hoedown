@@ -2200,6 +2200,7 @@ parse_htmlblock(hoedown_buffer *ob, hoedown_document *doc, uint8_t *data, size_t
 
     int tag1_w = 0;
 	int tag2_w = 0;
+    int only_has_tag_in_line = 0;
 
 	work.data = data;
 
@@ -2217,8 +2218,16 @@ parse_htmlblock(hoedown_buffer *ob, hoedown_document *doc, uint8_t *data, size_t
     j = 0;
     while ( j < size && data[j] != '>' && data[j] != '\n')
         j++;
-    
     if (data[j] == '>') tag1_w = (int)j+1;
+    
+    if ( tag1_w > 0) {
+        j = tag1_w;
+        while ( j < size && data[j] == ' ')
+            j++;
+        if ( j == size || data[j] == '\n' ) {
+            only_has_tag_in_line = 1;
+        }
+    }
 
 	/* handling of special cases */
 	if (!curtag) {
@@ -2262,7 +2271,13 @@ parse_htmlblock(hoedown_buffer *ob, hoedown_document *doc, uint8_t *data, size_t
 		}
 
 		/* no special case recognised */
-		return 0;
+        if ( tag1_w > 0 && only_has_tag_in_line ) {
+            /* 对于单行，而且异常/不认识的标签，直接输出,就不作为 paragraph 解析了 */
+            hoedown_buffer_put(ob, data, tag1_w);
+            return tag1_w;
+        } else {
+            return 0;
+        }
 	}
 
 	/* looking for a matching closing tag in strict mode */
@@ -2277,7 +2292,13 @@ parse_htmlblock(hoedown_buffer *ob, hoedown_document *doc, uint8_t *data, size_t
 		tag_end = htmlblock_find_end(curtag, tag_len, doc, data, size, &tag2_w);
 
 	if (!tag_end) {
-		return 0;
+        /* 找到合法的标签，但是有头无尾，就直接输出 */
+        if ( tag1_w > 0 ) {
+            hoedown_buffer_put(ob, data, tag1_w);
+            return tag1_w;
+        } else {
+            return 0;
+        }
 	}
 
 	if ( strcmp(curtag,"div") == 0)
