@@ -1692,6 +1692,35 @@ parse_blockquote(hoedown_buffer *ob, hoedown_document *doc, uint8_t *data, size_
 static size_t
 parse_htmlblock(hoedown_buffer *ob, hoedown_document *doc, uint8_t *data, size_t size, int do_render);
 
+
+static int
+is_codefence_not_closed(uint8_t *data, size_t size) {
+    int i;
+    size_t w;
+    uint8_t c;
+    
+    int code_beg;
+
+    code_beg = (int)is_codefence(data, size, &w, &c);
+    
+    if ( code_beg ) {
+        i = code_beg;
+        while ( i < (int)size && data[i] != c ) i++;
+        
+        if ( data[i] == c ) {
+            int n = 0;
+            while ( i+n < (int)size && data[i+n] == c ) n++;
+            
+            /* ```code```  的形式不算 */
+            if ( n >= 3) return 0;
+            return 1;
+        }
+        return 1;
+    }
+
+    return 0;
+}
+
 /* parse_blockquote • handles parsing of a regular paragraph */
 static size_t
 parse_paragraph(hoedown_buffer *ob, hoedown_document *doc, uint8_t *data, size_t size)
@@ -1699,9 +1728,6 @@ parse_paragraph(hoedown_buffer *ob, hoedown_document *doc, uint8_t *data, size_t
 	hoedown_buffer work = { NULL, 0, 0, 0, NULL, NULL, NULL };
 	size_t i = 0, end = 0;
 	int level = 0;
-
-	size_t w;
-	uint8_t c;
 
 	work.data = data;
 
@@ -1716,7 +1742,7 @@ parse_paragraph(hoedown_buffer *ob, hoedown_document *doc, uint8_t *data, size_t
 			break;
 		}
 
-		if (is_codefence(data + i, size - i, &w, &c)) {
+		if (is_codefence_not_closed(data + i, size - i)) {
 			end = i;
 			break;
 		}
