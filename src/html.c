@@ -268,7 +268,7 @@ rndr_list(hoedown_buffer *ob, const hoedown_buffer *content, hoedown_list_flags 
 
 
 static int
-is_end_of_br_and_tag(uint8_t* s, size_t size) {
+is_end_of_br_or_tag(uint8_t* s, size_t size) {
     size_t i;
     size_t end = size;
     char* data = (char*)s;
@@ -332,7 +332,7 @@ rndr_listitem(hoedown_buffer *ob, const hoedown_buffer *content, hoedown_list_fl
                 if ( end == size ) {
                     /* emtpy */
                 }
-                else if ( is_end_of_br_and_tag(content->data + beg, end - beg) ||
+                else if ( is_end_of_br_or_tag(content->data + beg, end - beg) ||
                     content->data[beg] == '<' ) {
                     hoedown_buffer_put(ob, (uint8_t*)"\n", 1);
                 }
