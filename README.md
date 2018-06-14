@@ -28,9 +28,11 @@ mweb的问题列表： issue：https://github.com/oulvhai/MWeb-issues
 
 
 主要修改几个新的功能：
-- 列表之前语法之前，不需要强制 **空行**；
+- 列表块之前，不需要强制 **空行**；
+- 代码块之前，不需要强制 **空行**；
 - 列表里面，自然换行，也可以解析为\<br\>
 - bug修复：代码块中的 语法，被误以为 footnote；
+- 其他小细节；
 
 其实更好的办法是换库：**github的cmark库**。目前活跃度很高，代码质量也很高。<br>
 https://github.com/github/cmark/tree/master/src
