@@ -488,6 +488,11 @@ parse_inline(hoedown_buffer *ob, hoedown_document *doc, uint8_t *data, size_t si
 		/* copying inactive chars into the output */
 		while (end < size && active_char[data[end]] == 0)
 			end++;
+        
+        if ( data[end] == '_' && end > 0 && !_isspace(data[end-1]) )  {
+            end++;
+            continue;
+        }
 
 		if (doc->md.normal_text) {
 			work.data = data + i;
@@ -633,6 +638,10 @@ parse_emph1(hoedown_buffer *ob, hoedown_document *doc, uint8_t *data, size_t siz
 		if (!len) return 0;
 		i += len;
 		if (i >= size) return 0;
+        
+        if (data[i] == '_' &&
+            ( _isspace(data[i - 1]) || (i+1 < size && !_isspace(data[i + 1]))))
+            return 0;
 
 		if (data[i] == c && !_isspace(data[i - 1])) {
 
