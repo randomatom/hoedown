@@ -1714,7 +1714,9 @@ is_codefence_not_closed(uint8_t *data, size_t size) {
     
     if ( code_beg ) {
         i = code_beg;
-        while ( i < (int)size && data[i] != c ) i++;
+        
+        /* 当前行寻找 标志符 */
+        while ( i < (int)size && data[i] != '\n' && data[i] != c ) i++;
         
         if ( data[i] == c ) {
             int n = 0;
@@ -1751,7 +1753,7 @@ parse_paragraph(hoedown_buffer *ob, hoedown_document *doc, uint8_t *data, size_t
 			break;
 		}
 
-		if (is_codefence_not_closed(data + i, size - i)) {
+		if ((doc->ext_flags & HOEDOWN_EXT_FENCED_CODE) != 0 && is_codefence_not_closed(data + i, size - i)) {
 			end = i;
 			break;
 		}
