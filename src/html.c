@@ -291,35 +291,31 @@ is_end_of_br_or_tag(uint8_t* s, size_t size) {
 }
 
 
-
-
 static void
-rndr_listitem(hoedown_buffer *ob, const hoedown_buffer *content, hoedown_list_flags flags, const hoedown_renderer_data *data)
+_rndr_inter_listitem(hoedown_buffer *ob, const hoedown_buffer *content, size_t offset,  hoedown_list_flags flags, const hoedown_renderer_data *data)
 {
-	hoedown_html_renderer_state *state = data->opaque;
+    hoedown_html_renderer_state *state = data->opaque;
     
-	HOEDOWN_BUFPUTSL(ob, "<li>");
-	if (content) {
+    if (content && content->size > offset) {
+        size_t size = content->size - offset;
+        uint8_t* text = content->data + offset;
         int last_line_need_br_tag = 0;
-
-		size_t size = content->size;
-		
-        while ( size > 0 && content->data[size-1] == '\n')
-			size--;
-
+        
+        while ( size > 0 && text[size-1] == '\n')
+            size--;
+        
         if (state->flags & HOEDOWN_HTML_HARD_WRAP) {
-            size_t beg, end;          
-            
+            size_t beg, end;
             
             beg = 0;
             end = 0;
             while ( beg < size ) {
                 end = beg;
-                while ( end < size && content->data[end] != '\n')
+                while ( end < size && text[end] != '\n')
                     end++;
                 
                 if ( last_line_need_br_tag ) {
-                    if ( content->data[beg] == '<' ) {
+                    if ( text[beg] == '<' ) {
                         hoedown_buffer_put(ob, (uint8_t*)"\n", 1);
                     } else {
                         rndr_linebreak(ob, data);
@@ -327,28 +323,38 @@ rndr_listitem(hoedown_buffer *ob, const hoedown_buffer *content, hoedown_list_fl
                     last_line_need_br_tag = 0;
                 }
                 
-                hoedown_buffer_put(ob, content->data + beg , end - beg);
+                hoedown_buffer_put(ob, text + beg , end - beg);
                 
                 if ( end == size ) {
                     /* emtpy */
                 }
-                else if ( is_end_of_br_or_tag(content->data + beg, end - beg) ||
-                    content->data[beg] == '<' ) {
+                else if ( is_end_of_br_or_tag(text + beg, end - beg) ||
+                         text[beg] == '<' ) {
                     hoedown_buffer_put(ob, (uint8_t*)"\n", 1);
                 }
                 else {
                     last_line_need_br_tag = 1;
                 }
-
-
+                
+                
                 beg = end + 1;
-                while ( beg < size && content->data[beg] == '\n')
+                while ( beg < size && text[beg] == '\n')
                     beg++;
             }
         }
-		else {
-			hoedown_buffer_put(ob, content->data, size); 
-		}
+        else {
+            hoedown_buffer_put(ob, text, size);
+        }
+    }
+}
+
+
+static void
+rndr_listitem(hoedown_buffer *ob, const hoedown_buffer *content, hoedown_list_flags flags, const hoedown_renderer_data *data)
+{
+	HOEDOWN_BUFPUTSL(ob, "<li>");
+	if (content) {
+        _rndr_inter_listitem(ob, content, 0, flags, data);
 	}
 	HOEDOWN_BUFPUTSL(ob, "</li>\n");
 }
