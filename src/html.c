@@ -291,7 +291,7 @@ is_end_of_br_or_tag(uint8_t* s, size_t size) {
 }
 
 
-static void
+void
 _rndr_inter_listitem(hoedown_buffer *ob, const hoedown_buffer *content, size_t offset,  hoedown_list_flags flags, const hoedown_renderer_data *data)
 {
     hoedown_html_renderer_state *state = data->opaque;
