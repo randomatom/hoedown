@@ -75,7 +75,8 @@ hoedown_renderer *hoedown_html_toc_renderer_new(
 
 /* hoedown_html_renderer_free: deallocate an HTML renderer */
 void hoedown_html_renderer_free(hoedown_renderer *renderer);
-
+/* add api for mweb */
+void _rndr_inter_listitem(hoedown_buffer *ob, const hoedown_buffer *content, size_t offset,  hoedown_list_flags flags, const hoedown_renderer_data *data);
 
 #ifdef __cplusplus
 }
