@@ -350,7 +350,7 @@ _rndr_inter_listitem(hoedown_buffer *ob, const hoedown_buffer *content, size_t o
 
 void
 api_rndr_inter_listitem(hoedown_buffer *ob, const hoedown_buffer *content, size_t offset,  hoedown_list_flags flags, const hoedown_renderer_data *data) {
-    _rndr_inter_listitem(ob, content, 0, flags, data);
+    _rndr_inter_listitem(ob, content, offset, flags, data);
 }
 
 
