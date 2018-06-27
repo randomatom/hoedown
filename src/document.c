@@ -489,7 +489,7 @@ parse_inline(hoedown_buffer *ob, hoedown_document *doc, uint8_t *data, size_t si
 		while (end < size && active_char[data[end]] == 0)
 			end++;
         
-        if ( data[end] == '_' && end > 0 && !_isspace(data[end-1]) )  {
+        if ( end < size && data[end] == '_' && end > 0 && !_isspace(data[end-1]) )  {
             end++;
             continue;
         }
