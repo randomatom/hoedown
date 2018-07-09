@@ -2227,6 +2227,26 @@ htmlblock_find_end_strict(
 	return i;
 }
 
+static size_t
+find_block_end(uint8_t *data, size_t size)
+{
+    size_t i = 0;
+    
+    while ( i < size ) {
+        while ( i < size && data[i] != '\n' ) i++;
+        
+        if ( i == size ) return size;
+        
+        i++;
+        if ( data[i] == ' ') {
+            while ( i < size && data[i] == ' ' ) i++;
+        }
+        if ( data[i] == '\n') return i;
+    }
+    
+    return size;
+}
+
 /* parse_htmlblock • parsing of inline HTML block */
 static size_t
 parse_htmlblock(hoedown_buffer *ob, hoedown_document *doc, uint8_t *data, size_t size, int do_render)
@@ -2238,6 +2258,9 @@ parse_htmlblock(hoedown_buffer *ob, hoedown_document *doc, uint8_t *data, size_t
     int tag1_w = 0;
 	int tag2_w = 0;
     int only_has_tag_in_line = 0;
+    int blink_after_tag = 0;
+    
+    size_t block_size = 0;
 
 	work.data = data;
 
@@ -2248,6 +2271,7 @@ parse_htmlblock(hoedown_buffer *ob, hoedown_document *doc, uint8_t *data, size_t
 	i = 1;
 	while (i < size && data[i] != '>' && data[i] != ' ')
 		i++;
+
 
 	if (i < size)
 		curtag = hoedown_find_block_tag((char *)data + 1, (int)i - 1);
@@ -2263,6 +2287,10 @@ parse_htmlblock(hoedown_buffer *ob, hoedown_document *doc, uint8_t *data, size_t
             j++;
         if ( j == size || data[j] == '\n' ) {
             only_has_tag_in_line = 1;
+
+            j++;
+            if ( j < size && data[j] == '\n')
+                blink_after_tag = 1;
         }
     }
 
@@ -2319,8 +2347,18 @@ parse_htmlblock(hoedown_buffer *ob, hoedown_document *doc, uint8_t *data, size_t
 
 	/* looking for a matching closing tag in strict mode */
 	tag_len = strlen(curtag);
+    
 
-	tag_end = htmlblock_find_end_strict(curtag, tag_len, doc, data, size, &tag2_w);
+    if ( strcmp(curtag, "script")==0
+        || strcmp(curtag, "pre")==0
+     || strcmp(curtag, "style")==0 )
+    {
+        block_size = size;
+    } else {
+        block_size = find_block_end(data, size);
+    }
+
+    tag_end = htmlblock_find_end_strict(curtag, tag_len, doc, data, size, &tag2_w);
 
 
 	/* if not found, trying a second pass looking for indented match */
@@ -2329,7 +2367,7 @@ parse_htmlblock(hoedown_buffer *ob, hoedown_document *doc, uint8_t *data, size_t
 		tag_end = htmlblock_find_end(curtag, tag_len, doc, data, size, &tag2_w);
 
 	if (!tag_end) {
-        /* 找到合法的标签，但是有头无尾，就直接输出 */
+        /* 找到合法的「块标签」，但是有头无尾，就直接输出 整块 */
         if ( tag1_w > 0 ) {
             hoedown_buffer_put(ob, data, tag1_w);
             return tag1_w;
@@ -2338,21 +2376,27 @@ parse_htmlblock(hoedown_buffer *ob, hoedown_document *doc, uint8_t *data, size_t
         }
 	}
 
-	if ( strcmp(curtag,"div") == 0)
+    /* 块Tags之后，【有】两个空行*/
+	if ( block_size < tag_end )
 	{
-		hoedown_buffer_put(ob, data, tag1_w);
-		parse_block(ob, doc, data + tag1_w , tag_end - tag2_w - tag1_w);
+		hoedown_buffer_put(ob, data, block_size);
+		parse_block(ob, doc, data + block_size , tag_end - tag2_w - block_size);
 		hoedown_buffer_put(ob, data + tag_end -  tag2_w, tag2_w);
 		return tag_end;
-	}
+    } else {
+        /* 块Tags之后，【没有】两个空行*/
+        work.size = tag_end;
+        if (do_render && doc->md.blockhtml)
+            doc->md.blockhtml(ob, &work, &doc->data);
+        
+        return tag_end;
+    }
+
+    
+    
 
 
-	/* the end of the block has been found */
-	work.size = tag_end;
-	if (do_render && doc->md.blockhtml)
-		doc->md.blockhtml(ob, &work, &doc->data);
 
-	return tag_end;
 }
 
 static void
