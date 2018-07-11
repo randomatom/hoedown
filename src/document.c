@@ -1561,19 +1561,6 @@ is_headerline(uint8_t *data, size_t size)
 	return 0;
 }
 
-static int
-is_next_headerline(uint8_t *data, size_t size)
-{
-	size_t i = 0;
-
-	while (i < size && data[i] != '\n')
-		i++;
-
-	if (++i >= size)
-		return 0;
-
-	return is_headerline(data + i, size - i);
-}
 
 /* prefix_quote • returns blockquote prefix length */
 static size_t
@@ -1623,9 +1610,6 @@ prefix_oli(uint8_t *data, size_t size)
 	if (i + 1 >= size || data[i] != '.' || data[i + 1] != ' ')
 		return 0;
 
-	if (is_next_headerline(data + i, size - i))
-		return 0;
-
 	return i + 2;
 }
 
@@ -1644,10 +1628,7 @@ prefix_uli(uint8_t *data, size_t size)
 		data[i + 1] != ' ')
 		return 0;
 
-	if (is_next_headerline(data + i, size - i))
-		return 0;
-
-	return i + 2;
+    return i + 2;
 }
 
 
@@ -1975,7 +1956,7 @@ parse_listitem(hoedown_buffer *ob, hoedown_document *doc, uint8_t *data, size_t 
 		}
 
 		/* checking for a new item */
-		if ((has_next_uli && !is_hrule(data + beg + i, end - beg - i)) || has_next_oli) {
+		if (has_next_uli  || has_next_oli) {
             
 			if (in_empty)
 				has_inside_empty = 1;
@@ -1997,7 +1978,9 @@ parse_listitem(hoedown_buffer *ob, hoedown_document *doc, uint8_t *data, size_t 
 		/* joining only indented stuff after empty lines;
 		 * note that now we only require 1 space of indentation
 		 * to continue a list */
-		else if (in_empty && pre == 0) {
+		else if ( (in_empty && pre == 0)
+                 || is_hrule(data + beg + i, end - beg - i) )
+        {
 			*flags |= HOEDOWN_LI_END;
 			break;
 		}
