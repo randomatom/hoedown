@@ -1400,12 +1400,15 @@ static size_t
 is_empty(const uint8_t *data, size_t size)
 {
 	size_t i;
+    
+    if (size == 0 ) return 1;
 
 	for (i = 0; i < size && data[i] != '\n'; i++)
 		if (data[i] != ' ')
 			return 0;
 
-	return i + 1;
+    if (i == size ) return i;
+    return i + 1;
 }
 
 static int
@@ -2137,7 +2140,7 @@ htmlblock_is_end(
 	uint8_t *data,
 	size_t size)
 {
-	size_t i = tag_len + 3, w;
+	size_t i = tag_len + 3, w = 0;
 
 	/* try to match the end tag */
 	/* note: we're not considering tags like "</tag >" which are still valid */
@@ -2342,12 +2345,14 @@ parse_htmlblock(hoedown_buffer *ob, hoedown_document *doc, uint8_t *data, size_t
     }
 
     tag_end = htmlblock_find_end_strict(curtag, tag_len, doc, data, size, &tag2_w);
+    
 
 
 	/* if not found, trying a second pass looking for indented match */
 	/* but not if tag is "ins" or "del" (following original Markdown.pl) */
 	if (!tag_end && strcmp(curtag, "ins") != 0 && strcmp(curtag, "del") != 0)
 		tag_end = htmlblock_find_end(curtag, tag_len, doc, data, size, &tag2_w);
+
 
 	if (!tag_end) {
         /* 找到合法的「块标签」，但是有头无尾，就直接输出 整块 */
@@ -2360,7 +2365,7 @@ parse_htmlblock(hoedown_buffer *ob, hoedown_document *doc, uint8_t *data, size_t
 	}
 
     /* 块Tags之后，【有】两个空行*/
-	if ( block_size < tag_end )
+	if ( block_size + tag2_w < tag_end )
 	{
 		hoedown_buffer_put(ob, data, block_size);
 		parse_block(ob, doc, data + block_size , tag_end - tag2_w - block_size);
